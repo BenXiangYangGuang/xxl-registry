@@ -11,6 +11,19 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 属性:
+ * 1.registeryData (HashSet):要注册的数据;
+ * 2.discoveryData (ConcurrentHashMap<String,TreeSet<<String>>) :需要发现的数据;
+ * 后台线程:
+ * 1.registeryThread:一个注册的后台线程:向注册中心注册数据,每隔10秒钟注册一次;通过Thread.sleep()实现;
+ * 2.discoveryThread:一个发现的后台线程:没有要查找的数据,sleep(3 second);有要查找的数据,监控注册中心数据;然后sleep(10 second);刷新注册的数据;通过已经缓存数据的集合对比,没有改变不需要更新;
+ * 功能:
+ * regisitery:注册数据加入缓存,调用基础的注册方法(registryBaseClient.registry());
+ * remove:移除数据移除缓存,调用基础的移除方法(registryBaseClient.remove());
+ * discovery:先从缓存查询注册的数据,数据不一致,然后去刷新注册中心的数据,根据更新的数据,刷新本地缓存;
+ */
+
+/**
  * registry client, auto heatbeat registry info, auto monitor discovery info
  * service register remove refresh operation; and dependence data construction
  * @author xuxueli 2018-12-01 21:48:05

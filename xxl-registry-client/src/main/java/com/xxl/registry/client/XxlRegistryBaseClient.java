@@ -11,7 +11,7 @@ import java.util.*;
 
 /**
  * base util for registry
- * offer base function: remove discovery monitor register
+ * 提供最简单的register remove discovery monitor方法,向注册中心发送请求并返回结果.
  * @author xuxueli 2018-12-01 21:40:04
  */
 public class XxlRegistryBaseClient {

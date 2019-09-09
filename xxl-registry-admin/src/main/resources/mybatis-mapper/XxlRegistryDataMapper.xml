@@ -56,7 +56,8 @@
 			and t.key = #{key}
 		ORDER BY t.value ASC
 	</select>
-
+	<!--<![CDATA[ > ]]> 非转义字符 > -->
+	<!--DATE_ADD(updateTime, Interval #{timeout} SECOND) 以 updateTime 为基础;加上时间间隔-->
 	<delete id="cleanData" parameterType="java.util.HashMap" >
 		DELETE FROM xxl_registry_data
 		WHERE NOW() <![CDATA[ > ]]> DATE_ADD(updateTime, Interval #{timeout} SECOND)

@@ -78,6 +78,7 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
 
     /**
      * send RegistryData Update Message
+     * 更新事件信息,为每秒的广播做事件准备
      */
     private void sendRegistryDataUpdateMessage(XxlRegistry xxlRegistry){
         String registryUpdateJson = JacksonUtil.writeValueAsString(xxlRegistry);
@@ -329,6 +330,7 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
 
     /**
      * update Registry And Message
+     * 检测更新registery 数据 和更新 registery message 事件
      */
     private void checkRegistryDataAndSendMessage(XxlRegistryData xxlRegistryData){
         // data json
@@ -373,6 +375,19 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
 
     }
 
+    /**
+     * 客户端和服务端心跳频率:10s;
+     * 信息注册:
+     * 服务端通过广播机制实时同步服务注册信息向客户端;客户端连接服务端的long polling技术: 新注册和移除的服务 1 秒内通知客户端;客户端和服务端实时通信,进行续约;
+     * 文件和数据库内容的一致性:先处理数据库,然后处理磁盘文件;先更新数据库,然后写更新事件到registery message,最后通过广播线程处理registery message;
+     * discovery:只从文件读取;一致性都是按照磁盘文件为准;
+     *
+     * registry():加入registryQueue;
+     * remove():加入removeQueue;
+     * discovery():只从文件获取注册数据信息;
+     * monitor():返回DeferredResult;他是一个返回延迟结果的对象;它的结果在brocadcast Thread中处理;有结果或者超时自动返回结果.从registryDeferredResultMap中获取list,每一个key,有一个List<DeferredResult>> list;逐个处理list中的DeferredResult对象.
+     */
+
     // ------------------------ broadcase + file data ------------------------
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
@@ -390,7 +405,10 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
         if (registryDataFilePath==null || registryDataFilePath.trim().length()==0) {
             throw new RuntimeException("xxl-registry, registryDataFilePath empty.");
         }
-
+        /**
+         * 10个注册线程:
+         * 加入registryQueue;先更新registery data,然后更新registery,最后添加registery message;
+         */
         /**
          * registry registry data         (client-num/10 s)
          */
@@ -433,6 +451,10 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
                 }
             });
         }
+        /**
+         * 10个移除线程:
+         * 加入removeQueue;先删除registery data,然后更新registery,最后添加registery message;
+         */
 
         /**
          * remove registry data         (client-num/start-interval s)
@@ -473,7 +495,10 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
                 }
             });
         }
-
+        /**
+         * 一个广播线程:
+         * 广播线程从registeryMessage表获取事件(registry,remove....)信息,然后同步注册器磁盘文件和处理客户端监控结果,并返回客户端;客户端结果,两种情况;1. 成功;2. 3个心跳时间(10s)超时返回;
+         */
         /**
          * broadcase new one registry-data-file     (1/1s)  1 秒 执行一次; 采用thread 的方法;
          *
@@ -490,7 +515,7 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
                             for (XxlRegistryMessage message: messageList) {
                                 readedMessageIds.add(message.getId());
 
-                                if (message.getType() == 0) {   // from registry、add、update、deelete，ne need sync from db, only write
+                                if (message.getType() == 0) {   // from registry、add、update、delete，ne need sync from db, only write
 
                                     XxlRegistry xxlRegistry = JacksonUtil.readValue(message.getData(), XxlRegistry.class);
 
@@ -504,13 +529,13 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
                                         // default, sync from db （aready sync before message, only write）
                                     }
 
-                                    // sync file
+                                    // 同步注册器磁盘文件 和处理客户端监控结果,并返回客户端;客户端结果,两种情况;1. 成功;2. 3个心跳时间(10s)超时返回
                                     setFileRegistryData(xxlRegistry);
                                 }
                             }
                         }
 
-                        // clean old message;
+                        // clean old message; 每 10 处理一个 registery message 数据;然后清除已经度过的messageId;
                         if ( (System.currentTimeMillis()/1000) % registryBeatTime ==0) {
                             xxlRegistryMessageDao.cleanMessage(registryBeatTime);
                             readedMessageIds.clear();
@@ -530,6 +555,13 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
                 }
             }
         });
+        /**
+         * 一个旧数据清楚线程:
+         * 清除registery data 10 * 3 时间之前的;
+         * 然后更新registery数据库;
+         * 然后更新registery磁盘文件;
+         * 最后删除磁盘文件;
+         */
 
         /**
          *  clean old registry-data     (1/10s)
@@ -543,9 +575,9 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
             public void run() {
                 while (!executorStoped) {
 
-                    // align to beattime
+                    // align to beattime 基本都是每 10 秒;执行一次
                     try {
-                        long sleepSecond = registryBeatTime - (System.currentTimeMillis()/1000)%registryBeatTime;   // 1-9 随机时间,进行睡眠
+                        long sleepSecond = registryBeatTime - (System.currentTimeMillis()/1000)%registryBeatTime;   // 1-9 随机时间,大部分都是睡9s;
                          if (sleepSecond>0 && sleepSecond<registryBeatTime) {
                             System.out.println("睡眠时间:" +sleepSecond);
                             TimeUnit.SECONDS.sleep(sleepSecond);
