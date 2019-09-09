@@ -19,12 +19,12 @@ public class XxlRegistryBaseClientTest {
 
         // registry test
         List<XxlRegistryDataParamVO> registryDataList = new ArrayList<>();
-        registryDataList.add(new XxlRegistryDataParamVO("service01", "address01"));
-        registryDataList.add(new XxlRegistryDataParamVO("service02", "address02"));
+        registryDataList.add(new XxlRegistryDataParamVO("wei1", "address-wei1"));
+        registryDataList.add(new XxlRegistryDataParamVO("wei2", "address-wei2"));
         System.out.println("registry:" + registryClient.registry(registryDataList));
         TimeUnit.SECONDS.sleep(2);
 
-        // discovery test
+/*        // discovery test
         Set<String> keys = new TreeSet<>();
         keys.add("service01");
         keys.add("service02");
@@ -41,7 +41,7 @@ public class XxlRegistryBaseClientTest {
         // monitor test
         TimeUnit.SECONDS.sleep(10);
         System.out.println("monitor...");
-        registryClient.monitor(keys);
+        registryClient.monitor(keys);*/
     }
 
 }

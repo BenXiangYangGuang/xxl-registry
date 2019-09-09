@@ -9,7 +9,7 @@ public class XxlRegistryMessage {
 
     private int id;
     private int type;         // 消息类型：0-注册更新
-    private String data;      // 消息内容
+    private String data;      // 消息内容   // 是一个 xxl-register 消息内容
     private Date addTime;
 
 

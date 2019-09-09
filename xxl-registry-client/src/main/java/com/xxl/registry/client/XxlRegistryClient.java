@@ -12,13 +12,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * registry client, auto heatbeat registry info, auto monitor discovery info
- *
+ * service register remove refresh operation; and dependence data construction
  * @author xuxueli 2018-12-01 21:48:05
  */
 public class XxlRegistryClient {
     private static Logger logger = LoggerFactory.getLogger(XxlRegistryClient.class);
-
-
+    // client will register data
     private volatile Set<XxlRegistryDataParamVO> registryData = new HashSet<>();
     private volatile ConcurrentMap<String, TreeSet<String>> discoveryData = new ConcurrentHashMap<>();
 
@@ -50,6 +49,7 @@ public class XxlRegistryClient {
                         }
                     }
                     try {
+                        // per 10 seconds register once
                         TimeUnit.SECONDS.sleep(10);
                     } catch (Exception e) {
                         if (!registryThreadStop) {
@@ -184,7 +184,7 @@ public class XxlRegistryClient {
 
     /**
      * discovery
-     *
+     * client machine use discovery
      * @param keys
      * @return
      */

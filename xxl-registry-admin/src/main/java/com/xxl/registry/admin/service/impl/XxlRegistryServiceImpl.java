@@ -42,7 +42,7 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
     private String registryDataFilePath;
     @Value("${xxl.registry.accessToken}")
     private String accessToken;
-
+    // 10 second
     private int registryBeatTime = 10;
 
 
@@ -314,7 +314,7 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
         // monitor by client
         for (String key: keys) {
             String fileName = parseRegistryDataFileName(biz, env, key);
-
+            // one key map List<DeferredResult>
             List<DeferredResult> deferredResultList = registryDeferredResultMap.get(fileName);
             if (deferredResultList == null) {
                 deferredResultList = new ArrayList<>();
@@ -475,9 +475,9 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
         }
 
         /**
-         * broadcase new one registry-data-file     (1/1s)
+         * broadcase new one registry-data-file     (1/1s)  1 秒 执行一次; 采用thread 的方法;
          *
-         * clean old message   (1/10s)
+         * clean old message   (1/10s)  10 秒执行一次; 取余的方法;
          */
         executorService.execute(new Runnable() {
             @Override
@@ -545,8 +545,9 @@ public class XxlRegistryServiceImpl implements IXxlRegistryService, Initializing
 
                     // align to beattime
                     try {
-                        long sleepSecond = registryBeatTime - (System.currentTimeMillis()/1000)%registryBeatTime;
-                        if (sleepSecond>0 && sleepSecond<registryBeatTime) {
+                        long sleepSecond = registryBeatTime - (System.currentTimeMillis()/1000)%registryBeatTime;   // 1-9 随机时间,进行睡眠
+                         if (sleepSecond>0 && sleepSecond<registryBeatTime) {
+                            System.out.println("睡眠时间:" +sleepSecond);
                             TimeUnit.SECONDS.sleep(sleepSecond);
                         }
                     } catch (Exception e) {

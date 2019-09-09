@@ -11,7 +11,7 @@ import java.util.*;
 
 /**
  * base util for registry
- *
+ * offer base function: remove discovery monitor register
  * @author xuxueli 2018-12-01 21:40:04
  */
 public class XxlRegistryBaseClient {

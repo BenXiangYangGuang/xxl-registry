@@ -1,7 +1,7 @@
 CREATE database if NOT EXISTS `xxl-registry` default character set utf8 collate utf8_general_ci;
 use `xxl-registry`;
 
-
+-- 注册器
 CREATE TABLE `xxl_registry` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `biz` varchar(255) NOT NULL COMMENT '业务标识',
@@ -12,7 +12,7 @@ CREATE TABLE `xxl_registry` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `I_b_e_k` (`biz`,`env`,`key`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
+-- 注册数据
 CREATE TABLE `xxl_registry_data` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `biz` varchar(255) NOT NULL COMMENT '业务标识',
