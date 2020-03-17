@@ -14,6 +14,7 @@ import java.util.Map;
 
 /**
  * @author xuxueli 2018-11-21
+ * 注册中心的管理页面；网页上增删该查操作
  */
 @Controller
 @RequestMapping("/registry")

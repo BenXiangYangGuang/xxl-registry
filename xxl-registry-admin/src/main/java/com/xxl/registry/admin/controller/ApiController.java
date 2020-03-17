@@ -20,6 +20,7 @@ import java.util.Map;
 
 /**
  * @author xuxueli 2018-11-29
+ * 接受register client请求，并注册服务数据到，mysql数据库
  */
 @Controller
 @RequestMapping("/api")
